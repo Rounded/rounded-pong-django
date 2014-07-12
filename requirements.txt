@@ -1,0 +1,6 @@
+Django==1.6.2
+South==0.8.4
+djangorestframework==2.3.10
+django-filter==0.7
+django-nose==1.2
+django-oauth2-provider==0.2.6.1
