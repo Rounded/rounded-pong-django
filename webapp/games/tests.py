@@ -1,6 +1,9 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from rest_framework.test import APIClient
 
 from games.models import Game, Coffee
 
@@ -8,6 +11,9 @@ User = get_user_model()
 
 
 class GamesTestCase(TestCase):
+    """
+    Test our models
+    """
     def setUp(self):
         #because order matters, we'll just create a new scenario on each test
         pass
@@ -233,3 +239,100 @@ class GamesTestCase(TestCase):
         )
         self.assertEqual(len(jordan.games_won()), 3)
         self.assertEqual(len(jordan.games_lost()), 1)
+
+
+class APITestCase(TestCase):
+    """
+    Test our API endpoints
+    """
+    def setUp(self):
+        self.jordan = User.objects.create(email='jomessina@aol.com')
+        self.jordan.set_password('password')
+        self.jordan.save()
+        self.ben = User.objects.create(email='bennyben@aol.com')
+        self.ben.set_password('password')
+        self.ben.save()
+        self.andrew = User.objects.create(email='aff.the.middle.f.is.for.fierce@aol.com')
+        self.rob = User.objects.create(email='roberto@aol.com')
+        self.client_no_auth = APIClient()
+        self.client_jordan = APIClient()
+        self.client_jordan.login(username=self.jordan.email, password='password')
+        self.client_ben = APIClient()
+        self.client_ben.login(username=self.ben.email, password='password')
+
+    def test_list_get_create_game(self):
+        #delete all our games so we know we start fresh
+        Game.objects.all().delete()
+        response = self.client_no_auth.post(
+            '/games/',
+            {
+                'winner1': self.jordan.id,
+                'loser1': self.ben.id
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, 403)
+
+        response = self.client_jordan.post(
+            '/games/',
+            {
+                'winner1': self.jordan.id,
+                'loser1': self.ben.id
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, 201)
+        content_post = json.loads(response.content)
+        self.assertTrue(content_post['id'])
+
+        response = self.client_jordan.get(
+            '/games/' + str(content_post['id']) + '/'
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        content_get = json.loads(response.content)
+        self.assertEqual(content_get['id'], content_post['id'])
+        #add another game
+        self.client_jordan.post(
+            '/games/',
+            {
+                'winner1': self.jordan.id,
+                'loser1': self.ben.id
+            },
+            format='json'
+        )
+        #make sure 2 games are listed
+        response = self.client_jordan.get(
+            '/games/'
+        )
+        content = json.loads(response.content)
+        self.assertEqual(len(content), 2)
+
+    def test_pay_debt(self):
+        #delete all our games so we know we start fresh
+        Game.objects.all().delete()
+        self.client_jordan.post(
+            '/games/',
+            {
+                'winner1': self.jordan.id,
+                'loser1': self.ben.id
+            },
+            format='json'
+        )
+        self.client_jordan.post(
+            '/games/',
+            {
+                'winner1': self.jordan.id,
+                'loser1': self.ben.id
+            },
+            format='json'
+        )
+        response = self.client_ben.post(
+            '/pay-debt/',
+            {
+                'pay_user': self.jordan.id,
+            },
+            format='json'
+        )
+
+

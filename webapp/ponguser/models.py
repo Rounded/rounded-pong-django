@@ -6,7 +6,7 @@ from django.contrib.auth.models import (
 
 
 class PongUserManager(BaseUserManager):
-    def create_user(self, email, date_of_birth, password=None):
+    def create_user(self, email, password=None):
         """
         Creates and saves a User with the given email, date of
         birth and password.
@@ -16,21 +16,19 @@ class PongUserManager(BaseUserManager):
 
         user = self.model(
             email=self.normalize_email(email),
-            date_of_birth=date_of_birth,
         )
 
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, date_of_birth, password):
+    def create_superuser(self, email, password):
         """
         Creates and saves a superuser with the given email, date of
         birth and password.
         """
         user = self.create_user(email,
             password=password,
-            date_of_birth=date_of_birth
         )
         user.is_admin = True
         user.save(using=self._db)
@@ -43,13 +41,14 @@ class PongUser(AbstractBaseUser):
         max_length=255,
         unique=True,
     )
+    display_name = models.CharField(max_length=100, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
     objects = PongUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['date_of_birth']
+    REQUIRED_FIELDS = []
 
     def get_full_name(self):
         # The user is identified by their email address
