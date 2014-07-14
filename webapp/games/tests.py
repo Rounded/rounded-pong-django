@@ -349,4 +349,10 @@ class APITestCase(TestCase):
             '/users/' + str(self.jordan.id) + '/'
         )
 
-        
+    def test_index(self):
+        #delete all our games
+        Game.objects.all().delete()
+        response = self.client_jordan.get(
+            '/'
+        )
+        print response.content

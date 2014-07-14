@@ -11,6 +11,34 @@ from games.serializers import (
 User = get_user_model()
 
 
+class IndexAPIView(APIView):
+    authentication_classes = (authentication.SessionAuthentication, )
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request):
+        total_wins = {}
+        total_losses = {}
+        win_percentage = {}
+        for user in User.objects.all():
+            user_wins = len(user.games_won())
+            user_losses = len(user.games_lost())
+            total_wins[user.id] = user_wins
+            total_losses[user.id] = user_losses
+            if not user_wins == 0 and not user_losses == 0:
+                win_percentage[user.id] = float(user_wins) / float((user_wins + user_losses))
+            else:
+                win_percentage[user.id] = 0
+        serializer = GameSerializer(Game.objects.all()[:10], many=True)
+        return Response(
+            {
+                'wins': total_wins,
+                'losses': total_losses,
+                'win_percentage': win_percentage,
+                'games': serializer.data,
+            }
+        )
+
+
 class UsersAPIView(APIView):
     authentication_classes = (authentication.SessionAuthentication, )
     permission_classes = (permissions.IsAuthenticated, )
