@@ -86,6 +86,12 @@ class PongUser(AbstractBaseUser):
         owed_to_user = self.lost_coffees.filter(paid=False, winner=other_user).count()
         return owed_to_user - owed_from_user
 
+    def games(self):
+        from games.models import Game
+        return Game.objects.filter(
+            Q(winner1=self) | Q(winner2=self) | Q(loser1=self) | Q(loser2=self)
+        )
+
     def games_won(self):
         from games.models import Game
         return Game.objects.filter(

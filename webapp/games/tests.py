@@ -334,5 +334,19 @@ class APITestCase(TestCase):
             },
             format='json'
         )
+        self.assertEqual(self.ben.debt(self.jordan), 1)
 
+    def test_users(self):
+        #delete all our games
+        Game.objects.all().delete()
+        response = self.client_jordan.get(
+            '/users/'
+        )
+        content = json.loads(response.content)
+        self.assertEqual(len(content), 4)
+        
+        response = self.client_jordan.get(
+            '/users/' + str(self.jordan.id) + '/'
+        )
 
+        

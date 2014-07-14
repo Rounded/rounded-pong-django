@@ -16,14 +16,13 @@ class UsersAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request, user_id=None):
-        if not user_id:
+        if user_id is None:
             serializer = UserSimpleSerializer(User.objects.all(), many=True)
         else:
-            serializer = UserDetailSerializer(get_object_or_404(User, int(user_id)))
+            serializer = UserDetailSerializer(get_object_or_404(User, id=int(user_id)))
         return Response(
             serializer.data
         )
-
 
 
 class GamesAPIView(APIView):
